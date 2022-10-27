@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback-classic.version>1.2.10</logback-classic.version>
         <graal.version>22.3.0</graal.version>
-        <java.version>19</java.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencyManagement>
@@ -66,10 +66,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
-<!--                    <compilerArgs>-->
-<!--                        <arg>&#45;&#45;add-modules</arg>-->
-<!--                        <arg>jdk.incubator.foreign</arg>-->
-<!--                    </compilerArgs>-->
+                    <compilerArgs>
+                        <arg>--add-modules</arg>
+                        <arg>jdk.incubator.foreign</arg>
+                    </compilerArgs>
                     <compilerArgs>--enable-preview</compilerArgs>
                     <compilerVersion>${java.version}</compilerVersion>
                     <source>${java.version}</source>

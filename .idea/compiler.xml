@@ -14,11 +14,11 @@
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="--enable-preview" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="--enable-preview --add-modules jdk.incubator.foreign" />
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="lib" options="" />
-      <module name="lib-spring" options="" />
-      <module name="main" options="" />
+      <module name="lib" options="--add-modules jdk.incubator.foreign" />
+      <module name="lib-spring" options="--add-modules jdk.incubator.foreign" />
+      <module name="main" options="--add-modules jdk.incubator.foreign" />
       <module name="native" options="" />
     </option>
   </component>

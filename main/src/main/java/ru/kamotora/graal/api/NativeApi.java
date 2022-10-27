@@ -1,6 +1,10 @@
 package ru.kamotora.graal.api;
 
-import java.lang.foreign.*;
+import jdk.incubator.foreign.CLinker;
+import jdk.incubator.foreign.MemoryAddress;
+import jdk.incubator.foreign.MemorySegment;
+import jdk.incubator.foreign.ResourceScope;
+
 import java.nio.ByteBuffer;
 
 
@@ -50,7 +54,7 @@ public class NativeApi {
     private static native long createIsolate();
 
     static long toCStringPointer(String str) {
-        return address(SegmentAllocator.implicitAllocator().allocateUtf8String(str));
+        return address(CLinker.toCString(str, ResourceScope.newImplicitScope()));
     }
 
     static long toBytesPointer(byte[] bytes) {
@@ -62,14 +66,14 @@ public class NativeApi {
                 .allocateDirect(bytes.length)
                 .put(bytes);
         heapOffBuffer.position(0);
-        return MemorySegment.ofBuffer(heapOffBuffer);
+        return MemorySegment.ofByteBuffer(heapOffBuffer);
     }
 
     static byte[] fromBytesPointer(long bytesPointer, int size) {
         var address = MemoryAddress.ofLong(bytesPointer);
-        return MemorySegment
-                .ofAddress(address, size, MemorySession.openImplicit())
-                .toArray(ValueLayout.JAVA_BYTE);
+        return address
+                .asSegment(size, ResourceScope.newImplicitScope())
+                .toByteArray();
     }
 
     static long address(MemorySegment memorySegment) {
