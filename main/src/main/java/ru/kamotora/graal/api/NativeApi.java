@@ -1,12 +1,8 @@
 package ru.kamotora.graal.api;
 
-import jdk.incubator.foreign.CLinker;
-import jdk.incubator.foreign.MemoryAddress;
-import jdk.incubator.foreign.MemorySegment;
+import jdk.incubator.foreign.MemoryLayouts;
 import jdk.incubator.foreign.ResourceScope;
-
-import java.nio.ByteBuffer;
-
+import jdk.incubator.foreign.SegmentAllocator;
 
 /**
  * https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/package-summary.html
@@ -31,7 +27,7 @@ public class NativeApi {
         //Convert Java String to C *char
         var isolateThreadId = createIsolate();
         add(isolateThreadId, 5, 5);
-        var cStringPointer = toCStringPointer(email);
+        var cStringPointer = NativeUtils.toCStringPointer(email);
         test(isolateThreadId, cStringPointer);
     }
 
@@ -39,44 +35,33 @@ public class NativeApi {
     public static byte[] reverseBytes(byte[] bytes) {
         //Convert Java String to C *char
         var isolateThreadId = createIsolate();
-        var bytesSegment = toBytesSegment(bytes);
-        var bytesPointer = address(bytesSegment);
+        var bytesSegment = NativeUtils.toBytesSegment(bytes);
+        var bytesPointer = NativeUtils.address(bytesSegment);
         var reversedBytesPointer = testBytes(isolateThreadId, bytesPointer, bytes.length);
-        return fromBytesPointer(reversedBytesPointer, bytes.length);
+        return NativeUtils.fromBytesPointer(reversedBytesPointer, bytes.length);
+    }
+
+    // todo проверить на утечку памяти
+    public static byte[] generateRandomArray() {
+        //Convert Java String to C *char
+        var isolateThreadId = createIsolate();
+        try (var sharedScope = ResourceScope.newSharedScope()) {
+            var segment = SegmentAllocator.ofScope(sharedScope).allocate(MemoryLayouts.JAVA_INT);
+            var resultSizePointer = NativeUtils.address(segment);
+            var randomByteArrayPointer = randomByteArray(isolateThreadId, resultSizePointer);
+            var resultSize = segment.toIntArray()[0];
+            assert resultSize > 0 && resultSize <= 5;
+            return NativeUtils.fromBytesPointer(randomByteArrayPointer, resultSize);
+        }
     }
 
     private static native int test(long isolateThreadId, long emailPointer);
 
     private static native long testBytes(long isolateThreadId, long bytesArrayPointer, int size);
 
+    private static native long randomByteArray(long isolateThreadId, long resultSizePointer);
+
     private static native int add(long isolateThreadId, int a, int b);
 
     private static native long createIsolate();
-
-    static long toCStringPointer(String str) {
-        return address(CLinker.toCString(str, ResourceScope.newImplicitScope()));
-    }
-
-    static long toBytesPointer(byte[] bytes) {
-        return address(toBytesSegment(bytes));
-    }
-
-    static MemorySegment toBytesSegment(byte[] bytes) {
-        ByteBuffer heapOffBuffer = ByteBuffer
-                .allocateDirect(bytes.length)
-                .put(bytes);
-        heapOffBuffer.position(0);
-        return MemorySegment.ofByteBuffer(heapOffBuffer);
-    }
-
-    static byte[] fromBytesPointer(long bytesPointer, int size) {
-        var address = MemoryAddress.ofLong(bytesPointer);
-        return address
-                .asSegment(size, ResourceScope.newImplicitScope())
-                .toByteArray();
-    }
-
-    static long address(MemorySegment memorySegment) {
-        return memorySegment.address().toRawLongValue();
-    }
 }
