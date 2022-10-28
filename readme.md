@@ -2,8 +2,7 @@
 
  ```shell
 sdk use java 22.3.r17-grl
-cd lib
-mvn clean package -Pnative
+./mvnw clean package -Pnative -pl lib -am -Dmaven.test.skip=true -f pom.xml
 ```
 2. 
  * java 17: --add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED
