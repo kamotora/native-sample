@@ -1,12 +1,13 @@
 package ru.kamotora.graal.api;
 
-import jdk.incubator.foreign.MemoryLayouts;
-import jdk.incubator.foreign.ResourceScope;
-import jdk.incubator.foreign.SegmentAllocator;
+import jdk.incubator.foreign.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 
 /**
  * https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/package-summary.html
  */
+@Slf4j
 public class NativeApi {
 
     static {
@@ -55,6 +56,23 @@ public class NativeApi {
         }
     }
 
+    public static void generateRandomPoint() {
+        int x = RandomUtils.nextInt();
+        int y = RandomUtils.nextInt();
+        log.debug("call method 'createPoint' with x: {}, y: {}", x, y);
+        var pointPointer = createPoint(createIsolate(), x, y);
+        try (var sharedScope = ResourceScope.newSharedScope()) {
+            var address = MemoryAddress.ofLong(pointPointer);
+            MemorySegment.allocateNative(Point.NATIVE_LAYOUT, sharedScope);
+            var segment = address
+                    .asSegment(Point.NATIVE_LAYOUT.byteSize(), sharedScope);
+            var point = Point.read(segment);
+            log.debug("created point with x: {}, y: {}", point.x(), point.y());
+            // после выхода из try point удалится, т.к. sharedScope
+        }
+    }
+
+
     private static native int test(long isolateThreadId, long emailPointer);
 
     private static native long testBytes(long isolateThreadId, long bytesArrayPointer, int size);
@@ -62,6 +80,8 @@ public class NativeApi {
     private static native long randomByteArray(long isolateThreadId, long resultSizePointer);
 
     private static native int add(long isolateThreadId, int a, int b);
+
+    private static native long createPoint(long isolateThreadId, int x, int y);
 
     private static native long createIsolate();
 }

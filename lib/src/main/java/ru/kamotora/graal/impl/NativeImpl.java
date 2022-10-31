@@ -4,12 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.graalvm.nativeimage.IsolateThread;
+import org.graalvm.nativeimage.UnmanagedMemory;
 import org.graalvm.nativeimage.c.function.CEntryPoint;
+import org.graalvm.nativeimage.c.struct.SizeOf;
 import org.graalvm.nativeimage.c.type.CCharPointer;
 import org.graalvm.nativeimage.c.type.CIntPointer;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.word.Pointer;
+import org.graalvm.word.PointerBase;
 
+@SuppressWarnings("unused")
 @Slf4j
 public class NativeImpl {
 
@@ -60,18 +64,17 @@ public class NativeImpl {
         }
     }
 
-//    @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_test")
-//    public static void testObject(JNIEnvironment jniEnv, Pointer clazz,
-//                                  @CEntryPoint.IsolateThreadContext long isolateId,
-//                                  JObject applicationContext) {
-//        //Convert C *char to Java String
-//        PinnedObject.create()
-//        String email = CTypeConversion.toJavaString(pEmail);
-//        log.info("Email: {}", email);
-//        for (int i = 0; i < email.length(); i++) {
-//            log.info("Byte[{}]: {}", i, (int) email.getBytes()[i]);
-//        }
-//    }
+
+    @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_createPoint")
+    public static PointerBase createPoint(Pointer jniEnv, Pointer clazz,
+                                          @CEntryPoint.IsolateThreadContext long isolateId,
+                                          int x, int y) {
+        NativePoint nativePoint = UnmanagedMemory.malloc(SizeOf.get(NativePoint.class));
+        nativePoint.setX(x);
+        nativePoint.setY(y);
+        log.info("Point created with x: {}, y: {}", x, y);
+        return nativePoint;
+    }
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_add")
     public static void add(Pointer jniEnv, Pointer clazz,
