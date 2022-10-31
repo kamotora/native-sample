@@ -16,7 +16,8 @@ public class Main {
         NativeApi.print("kamotora@yandex.ru");
 //        reverseBytesTest();
 //        randomBytes();
-        NativeApi.generateRandomPoint();
+//        NativeApi.generateRandomPoint();
+        NativeApi.getErrorTest();
     }
 
     private static void randomBytes() {

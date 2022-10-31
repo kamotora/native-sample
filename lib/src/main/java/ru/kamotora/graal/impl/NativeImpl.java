@@ -1,5 +1,6 @@
 package ru.kamotora.graal.impl;
 
+import com.oracle.svm.core.jni.headers.JNIEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomUtils;
@@ -12,11 +13,14 @@ import org.graalvm.nativeimage.c.type.CIntPointer;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.word.Pointer;
 import org.graalvm.word.PointerBase;
+import org.graalvm.word.WordFactory;
 
 @SuppressWarnings("unused")
 @Slf4j
 public class NativeImpl {
 
+
+    private static final int SUCCESS_CODE = 0;
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_test")
     public static void test(Pointer jniEnv, Pointer clazz,
@@ -74,6 +78,49 @@ public class NativeImpl {
         nativePoint.setY(y);
         log.info("Point created with x: {}, y: {}", x, y);
         return nativePoint;
+    }
+
+    @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_getErrorText")
+    public static PointerBase getErrorText(JNIEnvironment jniEnv, Pointer clazz,
+                                           @CEntryPoint.IsolateThreadContext long isolateId,
+                                           boolean needError) {
+        try {
+            var result = someErrorMethod(needError);
+            NativeResponse response = UnmanagedMemory.calloc(SizeOf.get(NativeResponse.class));
+            log.debug("Size of response: {}, address: {}", SizeOf.get(NativeResponse.class), response.rawValue());
+            response.setCode(SUCCESS_CODE);
+//            try () {
+            var holder = CTypeConversion.toCString(result);
+            response.setResult(holder.get());
+            response.setErrorMessage(WordFactory.nullPointer());
+            log.debug("Response created. Code: {}, result: {}, errorMessage: {}", response.getCode(),
+                    CTypeConversion.toJavaString(response.getResult()),
+                    CTypeConversion.toJavaString(response.getErrorMessage()));
+            return response;
+//            }
+        } catch (NativeLibException e) {
+            NativeResponse response = UnmanagedMemory.malloc(SizeOf.get(NativeResponse.class));
+            log.debug("Size of response: {}, address: {}", SizeOf.get(NativeResponse.class), response.rawValue());
+            response.setResult(WordFactory.nullPointer());
+            response.setCode(e.getErrorCode());
+            if (e.getLocalizedMessage() != null) {
+                try (var holder = CTypeConversion.toCString(e.getLocalizedMessage())) {
+                    response.setErrorMessage(holder.get());
+                }
+            }
+            log.debug("Response created. Code: {}, result: {}, errorMessage: {}", response.getCode(),
+                    CTypeConversion.toJavaString(response.getResult()),
+                    CTypeConversion.toJavaString(response.getErrorMessage()));
+            return response;
+        }
+    }
+
+    private static String someErrorMethod(boolean needError) {
+        if (needError) {
+            throw new NativeLibException();
+        } else {
+            return "Success !!!";
+        }
     }
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_add")

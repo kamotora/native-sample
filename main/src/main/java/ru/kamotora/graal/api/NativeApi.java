@@ -1,8 +1,11 @@
 package ru.kamotora.graal.api;
 
-import jdk.incubator.foreign.*;
+import jdk.incubator.foreign.MemoryLayouts;
+import jdk.incubator.foreign.ResourceScope;
+import jdk.incubator.foreign.SegmentAllocator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/package-summary.html
@@ -61,17 +64,30 @@ public class NativeApi {
         int y = RandomUtils.nextInt();
         log.debug("call method 'createPoint' with x: {}, y: {}", x, y);
         var pointPointer = createPoint(createIsolate(), x, y);
-        try (var sharedScope = ResourceScope.newSharedScope()) {
-            var address = MemoryAddress.ofLong(pointPointer);
-            MemorySegment.allocateNative(Point.NATIVE_LAYOUT, sharedScope);
-            var segment = address
-                    .asSegment(Point.NATIVE_LAYOUT.byteSize(), sharedScope);
-            var point = Point.read(segment);
-            log.debug("created point with x: {}, y: {}", point.x(), point.y());
-            // после выхода из try point удалится, т.к. sharedScope
-        }
+        // По факту, копируем point
+        var point = NativeUtils.fromObjectPointer(pointPointer, Point.NATIVE_LAYOUT, Point::read);
+        log.debug("created point with x: {}, y: {}", point.x(), point.y());
+        // после выхода из try прочитанный point удалится, т.к. sharedScope
     }
 
+    public static void getErrorTest() {
+        var isolate = createIsolate();
+        var errorResponsePtr = getErrorText(isolate, true);
+        var errorResponse = NativeUtils.fromObjectPointer(errorResponsePtr, Response.NATIVE_LAYOUT, Response::read);
+        log.debug("First response: code: {}, error text: {}, resultPtr is null: {}", errorResponse.code(),
+                errorResponse.errorMessage(), NativeUtils.isNull(errorResponse.resultPtr()));
+        assert errorResponse.code() != 0;
+        assert StringUtils.isNotBlank(errorResponse.errorMessage());
+
+        var noErrorResponsePtr = getErrorText(isolate, false);
+        var noErrorResponse = NativeUtils.fromObjectPointer(noErrorResponsePtr, Response.NATIVE_LAYOUT, Response::read);
+        assert errorResponse.code() == 0;
+        log.debug("Second response: code: {}, error text: {}, resultPtr is null: {}", noErrorResponse.code(),
+                noErrorResponse.errorMessage(), NativeUtils.isNull(noErrorResponse.resultPtr()));
+        var result = NativeUtils.fromCStringPointer(noErrorResponse.resultPtr());
+        log.debug("Second response result: {}", result);
+        assert StringUtils.isNotBlank(result);
+    }
 
     private static native int test(long isolateThreadId, long emailPointer);
 
@@ -82,6 +98,8 @@ public class NativeApi {
     private static native int add(long isolateThreadId, int a, int b);
 
     private static native long createPoint(long isolateThreadId, int x, int y);
+
+    private static native long getErrorText(long isolateThreadId, boolean needError);
 
     private static native long createIsolate();
 }

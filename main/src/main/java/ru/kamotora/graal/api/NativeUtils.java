@@ -1,11 +1,10 @@
 package ru.kamotora.graal.api;
 
-import jdk.incubator.foreign.CLinker;
-import jdk.incubator.foreign.MemoryAddress;
-import jdk.incubator.foreign.MemorySegment;
-import jdk.incubator.foreign.ResourceScope;
+import jdk.incubator.foreign.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
+import java.util.function.Function;
 
 public class NativeUtils {
 
@@ -14,6 +13,24 @@ public class NativeUtils {
 
     public static long toCStringPointer(String str) {
         return address(CLinker.toCString(str, ResourceScope.newImplicitScope()));
+    }
+
+    public static boolean isNull(long pointer) {
+        return isNull(MemoryAddress.ofLong(pointer));
+    }
+
+    public static boolean isNull(MemoryAddress address) {
+        return MemoryAddress.NULL.equals(address.address());
+    }
+
+    @Nullable
+    public static String fromCStringPointer(long stringPtr) {
+        MemoryAddress addr = MemoryAddress.ofLong(stringPtr);
+        if (MemoryAddress.NULL.equals(addr.address())) {
+            return null;
+        } else {
+            return CLinker.toJavaString(addr);
+        }
     }
 
     public static long toBytesPointer(byte[] bytes) {
@@ -37,5 +54,16 @@ public class NativeUtils {
 
     public static long address(MemorySegment memorySegment) {
         return memorySegment.address().toRawLongValue();
+    }
+
+    public static <T> T fromObjectPointer(long pointer,
+                                          MemoryLayout memoryLayout,
+                                          Function<MemorySegment, T> readFunction) {
+        try (var sharedScope = ResourceScope.newSharedScope()) {
+            var address = MemoryAddress.ofLong(pointer);
+            var segment = address
+                    .asSegment(memoryLayout.byteSize(), sharedScope);
+            return readFunction.apply(segment);
+        }
     }
 }
