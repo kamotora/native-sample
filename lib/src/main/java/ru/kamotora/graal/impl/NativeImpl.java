@@ -22,10 +22,10 @@ public class NativeImpl {
 
     private static final int SUCCESS_CODE = 0;
 
-    @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_test")
-    public static void test(Pointer jniEnv, Pointer clazz,
-                            @CEntryPoint.IsolateThreadContext long isolateId,
-                            CCharPointer pEmail) {
+    @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_print")
+    public static void print(Pointer jniEnv, Pointer clazz,
+                             @CEntryPoint.IsolateThreadContext long isolateId,
+                             CCharPointer pEmail) {
         //Convert C *char to Java String
         String email = CTypeConversion.toJavaString(pEmail);
         log.info("Email: {}", email);
@@ -89,15 +89,14 @@ public class NativeImpl {
             NativeResponse response = UnmanagedMemory.calloc(SizeOf.get(NativeResponse.class));
             log.debug("Size of response: {}, address: {}", SizeOf.get(NativeResponse.class), response.rawValue());
             response.setCode(SUCCESS_CODE);
-//            try () {
-            var holder = CTypeConversion.toCString(result);
-            response.setResult(holder.get());
-            response.setErrorMessage(WordFactory.nullPointer());
-            log.debug("Response created. Code: {}, result: {}, errorMessage: {}", response.getCode(),
-                    CTypeConversion.toJavaString(response.getResult()),
-                    CTypeConversion.toJavaString(response.getErrorMessage()));
-            return response;
-//            }
+            try (var holder = CTypeConversion.toCString(result)) {
+                response.setResult(holder.get());
+                response.setErrorMessage(WordFactory.nullPointer());
+                log.debug("Response created. Code: {}, result: {}, errorMessage: {}", response.getCode(),
+                        CTypeConversion.toJavaString(response.getResult()),
+                        CTypeConversion.toJavaString(response.getErrorMessage()));
+                return response;
+            }
         } catch (NativeLibException e) {
             NativeResponse response = UnmanagedMemory.malloc(SizeOf.get(NativeResponse.class));
             log.debug("Size of response: {}, address: {}", SizeOf.get(NativeResponse.class), response.rawValue());

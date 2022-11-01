@@ -9,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/package-summary.html
+ *
+ * <a href="https://graalvm.slack.com/archives/CN9KSFB40/p1629811417043700">Чатик по graal</a>
  */
 @Slf4j
 public class NativeApi {
@@ -17,24 +19,32 @@ public class NativeApi {
         System.load(System.getProperty("user.dir") + "/lib/target/lib.so");
     }
 
+    /**
+     * Сложить 2 числа
+     * @param a
+     * @param b
+     */
     public static void add(int a, int b) {
         var isolateThreadId = createIsolate();
-        add(isolateThreadId, 5, 5);
+        add(isolateThreadId, a, b);
     }
 
     /**
-     * https://graalvm.slack.com/archives/CN9KSFB40/p1629811417043700
-     *
+     * Вывести в лог строку (email)
      * @param email
      */
     public static void print(String email) {
         //Convert Java String to C *char
         var isolateThreadId = createIsolate();
-        add(isolateThreadId, 5, 5);
         var cStringPointer = NativeUtils.toCStringPointer(email);
-        test(isolateThreadId, cStringPointer);
+        print(isolateThreadId, cStringPointer);
     }
 
+    /**
+     * Получить "перевернутый" массив
+     * @param bytes
+     * @return
+     */
     // todo проверить на утечку памяти
     public static byte[] reverseBytes(byte[] bytes) {
         //Convert Java String to C *char
@@ -89,7 +99,7 @@ public class NativeApi {
         assert StringUtils.isNotBlank(result);
     }
 
-    private static native int test(long isolateThreadId, long emailPointer);
+    private static native int print(long isolateThreadId, long emailPointer);
 
     private static native long testBytes(long isolateThreadId, long bytesArrayPointer, int size);
 

@@ -16,6 +16,6 @@ sdk use java 22.3.r17-grl
 
 Launch:
 * Working dir == root project dir
-* java 17: --add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED
-* java 19: --enable-preview --enable-native-access=ALL-UNNAMED
+* java 17: **--add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED**
+* java 19: **--enable-preview --enable-native-access=ALL-UNNAMED**
   ![image.png](.attachments/img.png)

@@ -9,8 +9,6 @@ import java.util.Arrays;
 @Slf4j
 public class Main {
 
-    public static final int BIG_ARRAY_SIZE = 1_000_000;
-
     public static void main(String[] args) {
         NativeApi.add(5, 5);
         NativeApi.print("kamotora@yandex.ru");
