@@ -3,6 +3,8 @@ package ru.kamotora.graal.api;
 import jdk.incubator.foreign.MemoryLayouts;
 import jdk.incubator.foreign.ResourceScope;
 import jdk.incubator.foreign.SegmentAllocator;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
  * <a href="https://graalvm.slack.com/archives/CN9KSFB40/p1629811417043700">Чатик по graal</a>
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class NativeApi {
 
     static {

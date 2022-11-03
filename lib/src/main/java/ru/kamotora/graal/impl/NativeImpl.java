@@ -81,7 +81,7 @@ public class NativeImpl {
     }
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_getErrorText")
-    public static PointerBase getErrorText(JNIEnvironment jniEnv, Pointer clazz,
+    public static NativeResponse getErrorText(JNIEnvironment jniEnv, Pointer clazz,
                                            @CEntryPoint.IsolateThreadContext long isolateId,
                                            boolean needError) {
         try {

@@ -14,6 +14,13 @@ sdk use java 22.3.r17-grl
 ./mvnw clean package -Pnative -pl lib -am -Dmaven.test.skip=true -f pom.xml
 ```
 
+Build shared native lib-spring:
+
+ ```shell
+sdk use java 22.3.r17-grl
+./mvnw clean package -Pnative -pl lib-spring -am -Dmaven.test.skip=true -f pom.xml
+```
+
 Launch:
 * Working dir == root project dir
 * java 17: **--add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED**
