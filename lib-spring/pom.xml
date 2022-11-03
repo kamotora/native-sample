@@ -14,6 +14,7 @@
 
     <properties>
         <spring-boot.version>2.7.1</spring-boot.version>
+        <spring-native.version>0.12.1</spring-native.version>
     </properties>
 
     <repositories>
@@ -36,15 +37,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-dependencies</artifactId>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.experimental</groupId>
             <artifactId>spring-native</artifactId>
-            <version>0.12.1</version>
+            <version>${spring-native.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -76,4 +71,31 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- mvn clean -Pnative -DskipTests package -->
+    <profiles>
+        <profile>
+            <id>native</id>
+            <dependencies>
+                <!-- Required with Maven Surefire 2.x -->
+                <dependency>
+                    <groupId>org.junit.platform</groupId>
+                    <artifactId>junit-platform-launcher</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

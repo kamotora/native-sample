@@ -24,7 +24,7 @@ public class NativeImpl {
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_print")
     public static void print(Pointer jniEnv, Pointer clazz,
-                             @CEntryPoint.IsolateThreadContext long isolateId,
+                             @CEntryPoint.IsolateThreadContext IsolateThread isolateThread,
                              CCharPointer pEmail) {
         //Convert C *char to Java String
         String email = CTypeConversion.toJavaString(pEmail);
@@ -40,7 +40,7 @@ public class NativeImpl {
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_testBytes")
     public static CCharPointer testBytes(Pointer jniEnv, Pointer clazz,
-                                         @CEntryPoint.IsolateThreadContext long isolateId,
+                                         @CEntryPoint.IsolateThreadContext IsolateThread isolateThread,
                                          CCharPointer pBytes, int size) {
         var bytesBuffer = CTypeConversion.asByteBuffer(pBytes, size);
         var bytes = new byte[size];
@@ -56,7 +56,7 @@ public class NativeImpl {
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_randomByteArray")
     public static CCharPointer randomByteArray(Pointer jniEnv, Pointer clazz,
-                                               @CEntryPoint.IsolateThreadContext long isolateId,
+                                               @CEntryPoint.IsolateThreadContext IsolateThread isolateThread,
                                                CIntPointer resultSizePointer) {
         var resultSize = RandomUtils.nextInt(1, 5);
         var bytes = RandomUtils.nextBytes(resultSize);
@@ -71,7 +71,7 @@ public class NativeImpl {
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_createPoint")
     public static PointerBase createPoint(Pointer jniEnv, Pointer clazz,
-                                          @CEntryPoint.IsolateThreadContext long isolateId,
+                                          @CEntryPoint.IsolateThreadContext IsolateThread isolateThread,
                                           int x, int y) {
         NativePoint nativePoint = UnmanagedMemory.malloc(SizeOf.get(NativePoint.class));
         nativePoint.setX(x);
@@ -82,7 +82,7 @@ public class NativeImpl {
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_getErrorText")
     public static NativeResponse getErrorText(JNIEnvironment jniEnv, Pointer clazz,
-                                           @CEntryPoint.IsolateThreadContext long isolateId,
+                                           @CEntryPoint.IsolateThreadContext IsolateThread isolateThread,
                                            boolean needError) {
         try {
             var result = someErrorMethod(needError);
@@ -124,7 +124,7 @@ public class NativeImpl {
 
     @CEntryPoint(name = "Java_ru_kamotora_graal_api_NativeApi_add")
     public static void add(Pointer jniEnv, Pointer clazz,
-                           @CEntryPoint.IsolateThreadContext long isolateId,
+                           @CEntryPoint.IsolateThreadContext IsolateThread isolateThread,
                            int a, int b) {
         System.out.println(a + b);
         log.info("Add result: {}", a + b);
